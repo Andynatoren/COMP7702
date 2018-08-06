@@ -1,0 +1,3 @@
+Hello World.
+This is the initial test for changing letters.
+The year is 2018. The course is COMP7702. The Author is Anders Stroemmen Danielsen
