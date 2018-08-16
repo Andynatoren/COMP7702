@@ -1,10 +1,14 @@
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.PriorityQueue;
 
 public class EightPuzzleSolver {
 
     private ArrayList<String> queue = new ArrayList<>();
+    private PriorityQueue<Node> priorityQueue = new PriorityQueue<>();
     private HashSet<String> visitedStates = new HashSet<>();
+    private HashMap<String,Node> visitedNodes = new HashMap<>();
 
 
 
@@ -19,8 +23,25 @@ public class EightPuzzleSolver {
         return newVisits;
     }
 
+    //Checks and updates the cheapest path to the possible nodes.
+    private void updatePriQueue(Node fromNode){
+        ArrayList<String> possibleMoves = Moves.getPossibleMoves(fromNode.getState());
+        for( String move: possibleMoves){
+            Node node = new Node(move,fromNode.getGoalState(),fromNode);
+            if(!visitedNodes.containsKey(move)){
+            priorityQueue.offer(node);
+            visitedNodes.put(move,node);
+            }
+            else if (node.getCost()< visitedNodes.get(move).getCost()){
+                visitedNodes.get(move).setParent(fromNode);
+                priorityQueue.offer(node);
+            }
+        }
 
-    private String Solve(String state, String goal_state, String method){
+    }
+
+
+    private String solve(String state, String goal_state, String method){
         queue.clear();
         visitedStates.clear();
         System.out.println("Finding solution for 8-puzzle state " +state+ " with goal: " + goal_state + ". Method: " + method);
@@ -29,7 +50,7 @@ public class EightPuzzleSolver {
         double startTime = System.nanoTime();
 
         //Checking parity
-        if(!Moves.parityCheck(state,goal_state)){
+        if(Moves.haveDifferentParity(state,goal_state)){
             double endTime = System.nanoTime();
             double duration = (endTime - startTime)/1000000  ;
             return ("The parity check shows that there is no solution." + "\n" +
@@ -46,16 +67,15 @@ public class EightPuzzleSolver {
                         "Time used: " + duration + " milliseconds.";
             }
             //Adds new visits to the state. returnNewVisits returns states not currently int the queue.
+            queue.addAll(returnNewVisits(Moves.getPossibleMoves(state)));
             switch (method.toLowerCase()){
                 case "dfs":
                     state = queue.get(queue.size()-1);
-                    queue.remove(queue.size() -1 );
-                    break;
+                    queue.remove(state);
                 case "bfs":
                     state = queue.get(0);
                     queue.remove(0);
             }
-            queue.addAll(returnNewVisits(Moves.getPossibleMoves(state)));
         }
         //Calculating computing time.
         double endTime = System.nanoTime();
@@ -65,17 +85,66 @@ public class EightPuzzleSolver {
     }
 
 
+    private String solveFaster(String state, String goalState){
+        priorityQueue.clear();
+        visitedStates.clear();
+        visitedNodes.clear();
+
+        System.out.println("Finding solution for 8-puzzle state " +state+ " with goal: " + goalState + ". Method: A*." );
+
+        //Starting computing time.
+        double startTime = System.nanoTime();
+
+        //Checking parity
+        if(Moves.haveDifferentParity(state,goalState)){
+            double endTime = System.nanoTime();
+            double duration = (endTime - startTime)/1000000  ;
+            return ("The parity check shows that there is no solution." + "\n" +
+                    "Time used: " + (duration)  + " milliseconds");
+        }
+
+        Node startNode = new Node(state,goalState, null);
+        updatePriQueue(startNode);
+        while (!priorityQueue.isEmpty()){
+            Node node = priorityQueue.poll();
+            if(node.isGoalState()){
+                double endTime = System.nanoTime();
+                double duration = (endTime - startTime)/1000000  ;
+                int counter = 0;
+                while (!node.isRoot()){
+                    node = node.getParent();
+                    counter++;
+                }
+                return "Goal state found in " + visitedStates.size() + " moves. The method used was A*.\n" +
+                        "Order found finds goalstate in " + counter + " moves."+"\n"+
+                        "Time used: " + duration + " milliseconds.";
+            }
+            updatePriQueue(node);
+
+        }
+        return "Something unexpected happened. Was not able to find goalstate. Visitied: " + visitedStates.size();
+    }
+
+
     public static void main(String[] args) {
-        EightPuzzleSolver bfs = new EightPuzzleSolver();
+        EightPuzzleSolver eightPuzzleSolver = new EightPuzzleSolver();
 
 
-        System.out.println(bfs.Solve("321_87654","_12345678","bfs"));
+        System.out.println(eightPuzzleSolver.solve("321_87654","_12345678","bfs"));
 
-        System.out.println(bfs.Solve("1348627_5","1238_4765","BFS"));
-        System.out.println(bfs.Solve("1348627_5","1238_4765","DFS"));
-        System.out.println(bfs.Solve("281_43765","1238_4765","BFS"));
-        System.out.println(bfs.Solve("281_43765","1238_4765","DFS"));
-        System.out.println(bfs.Solve("281463_75","1238_4765","BFS"));
-        System.out.println(bfs.Solve("281463_75","1238_4765","DFS"));
+        System.out.println(eightPuzzleSolver.solve("1348627_5","1238_4765","BFS"));
+        System.out.println(eightPuzzleSolver.solve("1348627_5","1238_4765","DFS"));
+        System.out.println(eightPuzzleSolver.solveFaster("1348627_5","1238_4765"));
+        System.out.println(eightPuzzleSolver.solve("281_43765","1238_4765","BFS"));
+        System.out.println(eightPuzzleSolver.solve("281_43765","1238_4765","DFS"));
+        System.out.println(eightPuzzleSolver.solveFaster("281_43765","1238_4765"));
+        System.out.println(eightPuzzleSolver.solve("281463_75","1238_4765","BFS"));
+        System.out.println(eightPuzzleSolver.solve("281463_75","1238_4765","DFS"));
+        System.out.println(eightPuzzleSolver.solveFaster("281463_75","1238_4765"));
+
+        System.out.println(eightPuzzleSolver.solve("8672543_1","12345678_","BFS"));
+        System.out.println(eightPuzzleSolver.solve("8672543_1","12345678_","DFS"));
+
+        System.out.println(eightPuzzleSolver.solveFaster("8672543_1","12345678_"));
     }
 }

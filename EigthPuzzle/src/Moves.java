@@ -30,7 +30,7 @@ import java.util.Arrays;
         StringAsList.remove("_");
         for (String character : StringAsList){
             int i = Integer.parseInt(character);
-            ArrayList<String> tempList = new ArrayList<>(StringAsList.subList(StringAsList.indexOf(character),StringAsList.size()-1));
+            ArrayList<String> tempList = new ArrayList<>(StringAsList.subList(StringAsList.indexOf(character),StringAsList.size()));
             for (String compareChar : tempList){
                 if(i>Integer.parseInt(compareChar)) parityNumber++;
             }
@@ -38,8 +38,21 @@ import java.util.Arrays;
         return parityNumber % 2;
     }
 
-    static boolean parityCheck(String state, String goalState){
-        return parity(state) - parity(goalState) == 0;
+    // Heuristic for computing the states distance to the goal state. Gives + 0.5 for every number not in the right place.
+    static float distance(String state, String goalState){
+        float d = 0;
+        String[] stateList = state.split("");
+        String[] goalList = goalState.split("");
+        for (int i=0; i < stateList.length; i++){
+            if(!stateList[i].equals(goalList[i]) ) d+=0.9;
+        }
+
+
+        return d;
+    }
+
+    static boolean haveDifferentParity(String state, String goalState){
+        return parity(state) != parity(goalState);
     }
 
 //    public static String singleMove(String state, String direction){
