@@ -43,11 +43,28 @@ import java.util.Arrays;
         float d = 0;
         String[] stateList = state.split("");
         String[] goalList = goalState.split("");
+
         for (int i=0; i < stateList.length; i++){
             if(!stateList[i].equals(goalList[i]) ) d+=0.9;
         }
+        return d;
+    }
+    static float improvedDistance(String state, String goalState){
+        float d = 0;
+        String[] stateList = state.split("");
+        String[] goalList = goalState.split("");
+        for(int i=0; i < stateList.length; i++){
 
-
+            int distanceGoalIndex = Math.abs(i - goalState.indexOf(stateList[i]));
+            while (distanceGoalIndex > 4){
+                distanceGoalIndex -= 3;
+                d ++;
+            }
+            while( distanceGoalIndex >0){
+                distanceGoalIndex -= 1;
+                d++;
+            }
+        }
         return d;
     }
 
